@@ -1,17 +1,12 @@
-import { useEffect } from "react";
-import Phaser from "phaser";
-import { config } from "./game/main";
+import { PhaserGame } from "./game/PhaserGame";
 
 function App() {
-  useEffect(() => {
-    const game = new Phaser.Game(config);
-
-    return () => {
-      game.destroy(true);
-    };
-  }, []);
-
-  return <div id="game-container" />;
+  return (
+    <div>
+      <h1>Web RPG Game</h1>
+      <PhaserGame />
+    </div>
+  );
 }
 
 export default App;
