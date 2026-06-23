@@ -1,14 +1,11 @@
 import Phaser from "phaser";
+import { DialogueWindow } from "../ui/DialogueWindow";
+import type { DialogueLine } from "../ui/DialogueWindow";
 
 const GAME_WIDTH = 800;
 const GAME_HEIGHT = 600;
 const PLAYER_SIZE = 32;
 const PLAYER_SPEED = 4;
-
-type DialogueLine = {
-  speaker: string;
-  text: string;
-};
 
 export class MainScene extends Phaser.Scene {
   private player!: Phaser.GameObjects.Rectangle;
@@ -22,11 +19,7 @@ export class MainScene extends Phaser.Scene {
     D: Phaser.Input.Keyboard.Key;
   };
   private interactKey!: Phaser.Input.Keyboard.Key;
-
-  private dialogueBox!: Phaser.GameObjects.Rectangle;
-  private speakerText!: Phaser.GameObjects.Text;
-  private dialogueText!: Phaser.GameObjects.Text;
-  private nextText!: Phaser.GameObjects.Text;
+  private dialogueWindow!: DialogueWindow;
 
   private dialogueLines: DialogueLine[] = [
     {
@@ -83,7 +76,7 @@ export class MainScene extends Phaser.Scene {
       Phaser.Input.Keyboard.KeyCodes.E,
     );
 
-    this.createDialogueWindow();
+    this.dialogueWindow = new DialogueWindow(this, GAME_WIDTH, GAME_HEIGHT);
   }
 
   update(): void {
@@ -132,6 +125,12 @@ export class MainScene extends Phaser.Scene {
     this.clampPlayerPosition();
   }
 
+  private showCurrentDialogueLine(): void {
+    const currentLine = this.dialogueLines[this.dialogueIndex];
+
+    this.dialogueWindow.setDialogue(currentLine);
+  }
+
   private clampPlayerPosition(): void {
     this.player.x = Phaser.Math.Clamp(
       this.player.x,
@@ -157,68 +156,12 @@ export class MainScene extends Phaser.Scene {
     return distance <= 60;
   }
 
-  private createDialogueWindow(): void {
-    this.dialogueBox = this.add.rectangle(
-      GAME_WIDTH / 2,
-      GAME_HEIGHT - 100,
-      GAME_WIDTH - 80,
-      160,
-      0x000000,
-      0.8,
-    );
-
-    this.speakerText = this.add.text(70, GAME_HEIGHT - 155, "", {
-      fontSize: "18px",
-      color: "#ffffff",
-    });
-
-    this.dialogueText = this.add.text(70, GAME_HEIGHT - 120, "", {
-      fontSize: "16px",
-      color: "#ffffff",
-      wordWrap: { width: GAME_WIDTH - 140 },
-    });
-
-    this.nextText = this.add.text(
-      GAME_WIDTH - 140,
-      GAME_HEIGHT - 55,
-      "[E] 次へ",
-      {
-        fontSize: "14px",
-        color: "#ffffff",
-      },
-    );
-
-    this.hideDialogueWindow();
-  }
-
-  private showDialogueWindow(): void {
-    this.dialogueBox.setVisible(true);
-    this.speakerText.setVisible(true);
-    this.dialogueText.setVisible(true);
-    this.nextText.setVisible(true);
-  }
-
-  private hideDialogueWindow(): void {
-    this.dialogueBox.setVisible(false);
-    this.speakerText.setVisible(false);
-    this.dialogueText.setVisible(false);
-    this.nextText.setVisible(false);
-  }
-
   private startDialogue(): void {
     this.isTalking = true;
     this.dialogueIndex = 0;
-    this.showDialogueWindow();
+    this.dialogueWindow.show();
     this.showCurrentDialogueLine();
   }
-
-  private showCurrentDialogueLine(): void {
-    const currentLine = this.dialogueLines[this.dialogueIndex];
-
-    this.speakerText.setText(currentLine.speaker);
-    this.dialogueText.setText(currentLine.text);
-  }
-
   private advanceDialogue(): void {
     this.dialogueIndex++;
 
@@ -226,13 +169,11 @@ export class MainScene extends Phaser.Scene {
       this.endDialogue();
       return;
     }
-
-    this.showCurrentDialogueLine();
   }
 
   private endDialogue(): void {
     this.isTalking = false;
     this.dialogueIndex = 0;
-    this.hideDialogueWindow();
+    this.dialogueWindow.hide();
   }
 }
